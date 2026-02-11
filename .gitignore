@@ -4,3 +4,6 @@
 .Ruserdata
 # Large data files - keep locally, don’t push to GitHub
 /Users/amytan/Desktop/gov51-ps1/data/raw/acs2024.csv
+
+# ignore large raw data
+data/raw/
