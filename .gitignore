@@ -3,4 +3,4 @@
 .RData
 .Ruserdata
 # Large data files - keep locally, don’t push to GitHub
-data/raw/acs2024.csv
+gov51-ps1/data/raw/acs2024.csv
