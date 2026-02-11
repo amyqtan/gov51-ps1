@@ -1,12 +1,13 @@
 ---
-title: "ps1"
-format: html
+title: "Gov 51: Problem Set 1"
+author: "Amy Tan"
+format: pdf
 editor: visual
 ---
 
 ## Question 1.7
 
-<https://github.com/amyqtan/gov51-ps1>
+Github link: <https://github.com/amyqtan/gov51-ps1>
 
 ## Question 2.1
 
@@ -17,7 +18,9 @@ acs2024 <- read_csv("/Users/amytan/Desktop/gov51-ps1/data/raw/acs2024.csv")
 
 ## Question 2.2
 
-TRANTIME is a 3-digit numeric variable reporting the total amount of time, in minutes, that it usually took the respondent to get from home to work last week. PERWT is a 6-digit numeric variable which indicates how many persons in the U.S. population are represented by a given person in an IPUMS sample, and it has and has two implied decimals (meaning that the last two digits of the value are decimals, and the third-to-last digit is the start of the ones place.
+TRANTIME is a 3-digit numeric variable reporting the total amount of time, in minutes, that it usually took the respondent to get from home to work last week. A zero value for TRANTIME would represent a zero minute commute time, implying that the person either works from home, does not work, etc. Fundamentally, a zero minute commute time means that the respondent is not a commuter.
+
+PERWT is a 6-digit numeric variable which indicates how many persons in the U.S. population are represented by a given person in an IPUMS sample, and it has two implied decimals (meaning that the last two digits of the value are decimals, and the third-to-last digit is the start of the ones place. This helps later, for weighted means, since it will allow us to weight the sample to be nationally representative.
 
 ## Question 2.3
 
@@ -32,12 +35,17 @@ acs2024_new <- acs2024 %>% mutate(
   employed = case_when(EMPSTAT == 1 ~ 1, TRUE ~ 0),
   unemployed = case_when(EMPSTAT == 2~ 1, TRUE ~ 0),
   not_labor_force = case_when(EMPSTAT %in% c(0, 3) ~ 1, TRUE ~ 0))
-
 ```
 
 ## Question 2.4
 
-\*answer this
+```{r}
+acs2024_new <- acs2024_new %>% filter(!INCTOT %in% c(9999999, 9999998))
+```
+
+Accidentally treating N/A codes as real zeroes could cause artificially low mean values, since those values are not real zeroes and are simply unknown. A solution to this could be to impute the data.
+
+For instance, for the variable `INCTOT`, the value 9999999 means the total income is N/A and the value 9999998 means the total income is unknown. If these were treated as actual values in the dataset, it would artificially raise the income total mean, since these are not actual total income values but rather unknown and N/A values. As a result, these values were filtered out with code as seen above so that they did not affect the mean.
 
 ## Question 2.5 (summary table)
 
@@ -136,10 +144,10 @@ The people with zero commute time are likely remote workers, unemployed people, 
 ## Question 3.2
 
 ```{r}
-commuters <- acs2024_new |> filter(TRANTIME > 0)
+commuters <- acs2024 |> filter(TRANTIME > 0)
 ```
 
-Commuters filters the data into a subset of people who have a commute time greater than zero. These are people who actually have to commute to work, as opposed to the people who work from home, who should not be counted.
+Commuters filters the data into a subset of people who have a commute time greater than zero. These are people who actually have to commute to work, as opposed to the people who have a value of zero for their commute time, who should not be counted as commuters, because they are not commuting at all.
 
 ## Question 3.3
 
@@ -221,3 +229,55 @@ knitr::kable(commuters_summarytable, digits = 1, caption = "Summary Statistics f
 ```
 
 ## 
+
+## Question 4.1
+
+```{r}
+library(ggplot2)
+commuters_graph <- ggplot(data = commuters, mapping = aes(x = TRANTIME)) + 
+  geom_histogram(binwidth=5, boundary = 0, fill = "blue", color = "white") + 
+  labs(
+    x = "Commute Time", 
+    y = "Number of Commuters", 
+    title = "Distribution of Commute Times in 2024 ACS Sample Data (Commuters Only)") + 
+  scale_x_continuous(breaks = seq(0, 200, by = 10))
+commuters_graph
+```
+
+## Question 4.2
+
+The histogram is significantly right skewed...
+
+## Question 4.3
+
+Median is not in the table
+
+## Question 4.4
+
+```{r}
+ggsave("/Users/amytan/Desktop/gov51-ps1/output/commute_histogram.png", plot = commuters_graph)
+
+```
+
+## Question 5.1
+
+```{r}
+weighted.mean(commuters$TRANTIME, commuters$PERWT)
+```
+
+The weighted mean is 27.19 minutes.
+
+## Question 5.2
+
+```{r}
+mean(commuters$TRANTIME)
+mean(commuters$TRANTIME) - weighted.mean(commuters$TRANTIME, commuters$PERWT)
+```
+
+The unweighted mean is 27.22 minutes. There is a difference of 0.024 between the unweighted and weighted mean.
+
+## Question 5.3
+
+The unweighted mean represents the mean commute time within the sample of respondents in commuters. The weighted mean represents the mean commute time of
+
+The weighted mean seeks to correct for oversampling and adjusts how many people in the U.S. population are represented by a given respondent within the survey data.
