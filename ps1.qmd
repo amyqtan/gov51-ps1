@@ -8,4 +8,216 @@ editor: visual
 
 <https://github.com/amyqtan/gov51-ps1>
 
+## Question 2.1
+
+```{r}
+library(tidyverse)
+acs2024 <- read_csv("/Users/amytan/Desktop/gov51-ps1/data/raw/acs2024.csv")
+```
+
+## Question 2.2
+
+TRANTIME is a 3-digit numeric variable reporting the total amount of time, in minutes, that it usually took the respondent to get from home to work last week. PERWT is a 6-digit numeric variable which indicates how many persons in the U.S. population are represented by a given person in an IPUMS sample, and it has and has two implied decimals (meaning that the last two digits of the value are decimals, and the third-to-last digit is the start of the ones place.
+
+## Question 2.3
+
+```{r}
+acs2024_new <- acs2024 %>% mutate(
+  female = case_when(SEX == 2 ~ 1, TRUE ~ 0),
+  less_than_hs = case_when(EDUC %in% c(0, 1, 2, 3, 4 ,5) ~ 1, TRUE ~ 0),
+  hs_only = case_when(EDUC == 6 ~ 1, TRUE ~ 0),
+  some_college = case_when(EDUC %in% c(7, 8, 9) ~ 1, TRUE ~ 0),
+  college_only = case_when(EDUC == 10 ~ 1, TRUE ~ 0),
+  advanced_degree = case_when(EDUC == 11 ~ 1, TRUE ~ 0),
+  employed = case_when(EMPSTAT == 1 ~ 1, TRUE ~ 0),
+  unemployed = case_when(EMPSTAT == 2~ 1, TRUE ~ 0),
+  not_labor_force = case_when(EMPSTAT %in% c(0, 3) ~ 1, TRUE ~ 0))
+
+```
+
+## Question 2.4
+
+\*answer this
+
+## Question 2.5 (summary table)
+
+```{r}
+acs2024_summarytable <- data.frame(
+  Variable = c("Age", "Female", "Less than High School", "High School Only", "Some College", "College Only", "Advanced Degree", "Employed", "Unemployed", "Not Labor Force", "Commute Time (mins)", "Total Income ($)"),
+  N = c(length(acs2024_new$AGE),
+        length(acs2024_new$female),
+        length(acs2024_new$less_than_hs),
+        length(acs2024_new$hs_only),
+        length(acs2024_new$some_college),
+        length(acs2024_new$college_only),
+        length(acs2024_new$advanced_degree),
+        length(acs2024_new$employed),
+        length(acs2024_new$unemployed),
+        length(acs2024_new$not_labor_force),
+        length(acs2024_new$TRANTIME),
+        length(acs2024_new$INCTOT)),
+  Mean = c(mean(acs2024_new$AGE),
+           mean(acs2024_new$female),
+           mean(acs2024_new$less_than_hs),
+           mean(acs2024_new$hs_only),
+           mean(acs2024_new$some_college),
+           mean(acs2024_new$college_only),
+           mean(acs2024_new$advanced_degree),
+           mean(acs2024_new$employed),
+           mean(acs2024_new$unemployed),
+           mean(acs2024_new$not_labor_force),
+           mean(acs2024_new$TRANTIME),
+           mean(acs2024_new$INCTOT)),
+  Std_Dev = c(sd(acs2024_new$AGE),
+           sd(acs2024_new$female),
+           sd(acs2024_new$less_than_hs),
+           sd(acs2024_new$hs_only),
+           sd(acs2024_new$some_college),
+           sd(acs2024_new$college_only),
+           sd(acs2024_new$advanced_degree),
+           sd(acs2024_new$employed),
+           sd(acs2024_new$unemployed),
+           sd(acs2024_new$not_labor_force),
+           sd(acs2024_new$TRANTIME),
+           sd(acs2024_new$INCTOT)),
+  Min = c(min(acs2024_new$AGE),
+           min(acs2024_new$female),
+           min(acs2024_new$less_than_hs),
+           min(acs2024_new$hs_only),
+           min(acs2024_new$some_college),
+           min(acs2024_new$college_only),
+           min(acs2024_new$advanced_degree),
+           min(acs2024_new$employed),
+           min(acs2024_new$unemployed),
+           min(acs2024_new$not_labor_force),
+           min(acs2024_new$TRANTIME),
+           min(acs2024_new$INCTOT)),
+  Max = c(max(acs2024_new$AGE),
+           max(acs2024_new$female),
+           max(acs2024_new$less_than_hs),
+           max(acs2024_new$hs_only),
+           max(acs2024_new$some_college),
+           max(acs2024_new$college_only),
+           max(acs2024_new$advanced_degree),
+           max(acs2024_new$employed),
+           max(acs2024_new$unemployed),
+           max(acs2024_new$not_labor_force),
+           max(acs2024_new$TRANTIME),
+           max(acs2024_new$INCTOT)))
+
+knitr::kable(acs2024_summarytable, digits = 1, caption = "Summary Statistics for 2024 ACS Sample") 
+
+```
+
+## Question 2.6
+
+The commute time of 195 minutes (3 hours and 15 minutes) makes sense for a commute time. While this is an extremely long commute, there are some people who make extremely long commutes in America because they work in extremely high-cost of living areas (and therefore cannot afford to live near where they work) or because they work extremely specialized jobs.
+
+## Question 3.1
+
+```{r}
+#number of commuters with a commute time of zero
+zero_trantime <- sum(acs2024$TRANTIME == 0) 
+zero_trantime
+
+#total number of respondents
+
+total_respondents <- acs2024 |> nrow() 
+total_respondents
+
+#percentage of respondents with a commute time of zero
+zero_trantime / total_respondents * 100 
+```
+
+According to the data, 2,062,945 people have a commute time of zero. This is 60.27% of total commuters (calculated by taking the number of people with zero commute time and dividing by the total number of respondents and then using both of those values to calculate a percentage).
+
+The people with zero commute time are likely remote workers, unemployed people, children, retirees, and people who do not commute at all because they don't have a commute.
+
+## Question 3.2
+
+```{r}
+commuters <- acs2024_new |> filter(TRANTIME > 0)
+```
+
+Commuters filters the data into a subset of people who have a commute time greater than zero. These are people who actually have to commute to work, as opposed to the people who work from home, who should not be counted.
+
+## Question 3.3
+
+```{r}
+total_commuters <- commuters |> nrow() #total number of commuters
+total_commuters
+total_respondents - zero_trantime
+```
+
+1,359,943 observations remain in the new dataset. To verify this was coded correctly, I subtracted the total number of respondents from those who had zero commute time (both of these variables were coded in question 3.1). This value should be equal to the number of rows in the new commuters dataset, since the new dataset filters out respondents with zero commute time from the total respondents.
+
+## Question 3.4
+
+```{r}
+commuters_summarytable <- data.frame(
+  Variable = c("Age", "Female", "Less than High School", "High School Only", "Some College", "College Only", "Advanced Degree", "Employed", "Unemployed", "Not Labor Force", "Commute Time (mins)", "Total Income ($)"),
+  N = c(length(commuters$AGE),
+        length(commuters$female),
+        length(commuters$less_than_hs),
+        length(commuters$hs_only),
+        length(commuters$some_college),
+        length(commuters$college_only),
+        length(commuters$advanced_degree),
+        length(commuters$employed),
+        length(commuters$unemployed),
+        length(commuters$not_labor_force),
+        length(commuters$TRANTIME),
+        length(commuters$INCTOT)),
+  Mean = c(mean(commuters$AGE),
+           mean(commuters$female),
+           mean(commuters$less_than_hs),
+           mean(commuters$hs_only),
+           mean(commuters$some_college),
+           mean(commuters$college_only),
+           mean(commuters$advanced_degree),
+           mean(commuters$employed),
+           mean(commuters$unemployed),
+           mean(commuters$not_labor_force),
+           mean(commuters$TRANTIME),
+           mean(commuters$INCTOT)),
+  Std_Dev = c(sd(commuters$AGE),
+           sd(commuters$female),
+           sd(commuters$less_than_hs),
+           sd(commuters$hs_only),
+           sd(commuters$some_college),
+           sd(commuters$college_only),
+           sd(commuters$advanced_degree),
+           sd(commuters$employed),
+           sd(commuters$unemployed),
+           sd(commuters$not_labor_force),
+           sd(commuters$TRANTIME),
+           sd(commuters$INCTOT)),
+  Min = c(min(commuters$AGE),
+           min(commuters$female),
+           min(commuters$less_than_hs),
+           min(commuters$hs_only),
+           min(commuters$some_college),
+           min(commuters$college_only),
+           min(commuters$advanced_degree),
+           min(commuters$employed),
+           min(commuters$unemployed),
+           min(commuters$not_labor_force),
+           min(commuters$TRANTIME),
+           min(commuters$INCTOT)),
+  Max = c(max(commuters$AGE),
+           max(commuters$female),
+           max(commuters$less_than_hs),
+           max(commuters$hs_only),
+           max(commuters$some_college),
+           max(commuters$college_only),
+           max(commuters$advanced_degree),
+           max(commuters$employed),
+           max(commuters$unemployed),
+           max(commuters$not_labor_force),
+           max(commuters$TRANTIME),
+           max(commuters$INCTOT)))
+
+knitr::kable(commuters_summarytable, digits = 1, caption = "Summary Statistics for only Commuters from 2024 ACS Sample") 
+```
+
 ## 
