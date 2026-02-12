@@ -34,24 +34,29 @@ acs2024_new <- acs2024 %>% mutate(
   advanced_degree = case_when(EDUC == 11 ~ 1, TRUE ~ 0),
   employed = case_when(EMPSTAT == 1 ~ 1, TRUE ~ 0),
   unemployed = case_when(EMPSTAT == 2~ 1, TRUE ~ 0),
-  not_labor_force = case_when(EMPSTAT %in% c(0, 3) ~ 1, TRUE ~ 0))
+  not_labor_force = case_when(EMPSTAT == 3 ~ 1, TRUE ~ 0))
 ```
 
 ## Question 2.4
 
 ```{r}
-acs2024_new <- acs2024_new %>% filter(!INCTOT %in% c(9999999, 9999998))
+acs2024_new_clean <- acs2024_new %>% mutate(INCTOT = na_if(INCTOT, 9999999),
+                                            INCTOT = na_if(INCTOT, 9999998))
 ```
 
 Accidentally treating N/A codes as real zeroes could cause artificially low mean values, since those values are not real zeroes and are simply unknown. A solution to this could be to impute the data.
 
-For instance, for the variable `INCTOT`, the value 9999999 means the total income is N/A and the value 9999998 means the total income is unknown. If these were treated as actual values in the dataset, it would artificially raise the income total mean, since these are not actual total income values but rather unknown and N/A values. As a result, these values were filtered out with code as seen above so that they did not affect the mean.
+For instance, for the variable `INCTOT`, the value 9999999 means the total income is N/A and the value 9999998 means the total income is unknown. If these were treated as actual values in the dataset, it would artificially raise the income total mean, since these are not actual total income values but rather unknown and N/A values. If they are treated as zeroes instead of N/A values, this would inaccurately lower the mean.
 
 ## Question 2.5 (summary table)
 
 ```{r}
 acs2024_summarytable <- data.frame(
-  Variable = c("Age", "Female", "Less than High School", "High School Only", "Some College", "College Only", "Advanced Degree", "Employed", "Unemployed", "Not Labor Force", "Commute Time (mins)", "Total Income ($)"),
+  Variable = c("Age", "Female", "Less than High School", 
+               "High School Only", "Some College", "College Only", 
+               "Advanced Degree", "Employed", "Unemployed", 
+               "Not in Labor Force", "Commute Time (mins)", 
+               "Total Income ($)"),
   N = c(length(acs2024_new$AGE),
         length(acs2024_new$female),
         length(acs2024_new$less_than_hs),
@@ -113,7 +118,93 @@ acs2024_summarytable <- data.frame(
            max(acs2024_new$TRANTIME),
            max(acs2024_new$INCTOT)))
 
-knitr::kable(acs2024_summarytable, digits = 1, caption = "Summary Statistics for 2024 ACS Sample") 
+```
+
+\newpage
+
+```{r}
+knitr::kable(acs2024_summarytable, 
+             digits = 2, 
+             caption = "Summary Statistics for 2024 ACS Sample (Before Marking NA Values)") 
+
+```
+
+As seen in this table, treating the NA and unknown values of 9999999 and 9999998 artificially raised the mean of total income, making it \$1,536,765.79, which is not a realistic mean income for the United States. This shows why it is important to accurately treat N/A values as N/As and not zeroes or as the numbers themselves. The next table properly treats the N/A values as N/A.
+
+```{r}
+acs2024_summarytable_clean <- data.frame(
+  Variable = c("Age", "Female", "Less than High School", "High School Only", 
+               "Some College", "College Only", "Advanced Degree", 
+               "Employed", "Unemployed", "Not in Labor Force", 
+               "Commute Time (mins)", "Total Income ($)"),
+  N = c(length(acs2024_new_clean$AGE),
+        length(acs2024_new_clean$female),
+        length(acs2024_new_clean$less_than_hs),
+        length(acs2024_new_clean$hs_only),
+        length(acs2024_new_clean$some_college),
+        length(acs2024_new_clean$college_only),
+        length(acs2024_new_clean$advanced_degree),
+        length(acs2024_new_clean$employed),
+        length(acs2024_new_clean$unemployed),
+        length(acs2024_new_clean$not_labor_force),
+        length(acs2024_new_clean$TRANTIME),
+        sum(!is.na(acs2024_new_clean$INCTOT))),
+  Mean = c(mean(acs2024_new_clean$AGE),
+           mean(acs2024_new_clean$female),
+           mean(acs2024_new_clean$less_than_hs),
+           mean(acs2024_new_clean$hs_only),
+           mean(acs2024_new_clean$some_college),
+           mean(acs2024_new_clean$college_only),
+           mean(acs2024_new_clean$advanced_degree),
+           mean(acs2024_new_clean$employed),
+           mean(acs2024_new_clean$unemployed),
+           mean(acs2024_new_clean$not_labor_force),
+           mean(acs2024_new_clean$TRANTIME),
+           mean(acs2024_new_clean$INCTOT, na.rm = TRUE)),
+  Std_Dev = c(sd(acs2024_new_clean$AGE),
+           sd(acs2024_new_clean$female),
+           sd(acs2024_new_clean$less_than_hs),
+           sd(acs2024_new_clean$hs_only),
+           sd(acs2024_new_clean$some_college),
+           sd(acs2024_new_clean$college_only),
+           sd(acs2024_new_clean$advanced_degree),
+           sd(acs2024_new_clean$employed),
+           sd(acs2024_new_clean$unemployed),
+           sd(acs2024_new_clean$not_labor_force),
+           sd(acs2024_new_clean$TRANTIME),
+           sd(acs2024_new_clean$INCTOT, na.rm = TRUE)),
+  Min = c(min(acs2024_new_clean$AGE),
+           min(acs2024_new_clean$female),
+           min(acs2024_new_clean$less_than_hs),
+           min(acs2024_new_clean$hs_only),
+           min(acs2024_new_clean$some_college),
+           min(acs2024_new_clean$college_only),
+           min(acs2024_new_clean$advanced_degree),
+           min(acs2024_new_clean$employed),
+           min(acs2024_new_clean$unemployed),
+           min(acs2024_new_clean$not_labor_force),
+           min(acs2024_new_clean$TRANTIME),
+           min(acs2024_new_clean$INCTOT, na.rm = TRUE)),
+  Max = c(max(acs2024_new_clean$AGE),
+           max(acs2024_new_clean$female),
+           max(acs2024_new_clean$less_than_hs),
+           max(acs2024_new_clean$hs_only),
+           max(acs2024_new_clean$some_college),
+           max(acs2024_new_clean$college_only),
+           max(acs2024_new_clean$advanced_degree),
+           max(acs2024_new_clean$employed),
+           max(acs2024_new_clean$unemployed),
+           max(acs2024_new_clean$not_labor_force),
+           max(acs2024_new_clean$TRANTIME),
+           max(acs2024_new_clean$INCTOT, na.rm = TRUE)))
+```
+
+\newpage
+
+```{r}
+knitr::kable(acs2024_summarytable_clean, 
+             digits = 2, 
+             caption = "Summary Statistics for 2024 ACS Sample (After Marking NA Values)") 
 
 ```
 
@@ -125,12 +216,12 @@ The commute time of 195 minutes (3 hours and 15 minutes) makes sense for a commu
 
 ```{r}
 #number of commuters with a commute time of zero
-zero_trantime <- sum(acs2024$TRANTIME == 0) 
+zero_trantime <- sum(acs2024_new$TRANTIME == 0) 
 zero_trantime
 
 #total number of respondents
 
-total_respondents <- acs2024 |> nrow() 
+total_respondents <- acs2024_new |> nrow() 
 total_respondents
 
 #percentage of respondents with a commute time of zero
@@ -144,7 +235,7 @@ The people with zero commute time are likely remote workers, unemployed people, 
 ## Question 3.2
 
 ```{r}
-commuters <- acs2024 |> filter(TRANTIME > 0)
+commuters <- acs2024_new |> filter(TRANTIME > 0)
 ```
 
 Commuters filters the data into a subset of people who have a commute time greater than zero. These are people who actually have to commute to work, as opposed to the people who have a value of zero for their commute time, who should not be counted as commuters, because they are not commuting at all.
@@ -158,6 +249,8 @@ total_respondents - zero_trantime
 ```
 
 1,359,943 observations remain in the new dataset. To verify this was coded correctly, I subtracted the total number of respondents from those who had zero commute time (both of these variables were coded in question 3.1). This value should be equal to the number of rows in the new commuters dataset, since the new dataset filters out respondents with zero commute time from the total respondents.
+
+The new minimum TRANTIME is 1 minute, which makes sense, because that is a commute (albeit very short but possible, such as living next door to the workplace) as shown in the table in question 3.4.
 
 ## Question 3.4
 
@@ -224,11 +317,15 @@ commuters_summarytable <- data.frame(
            max(commuters$not_labor_force),
            max(commuters$TRANTIME),
            max(commuters$INCTOT)))
-
-knitr::kable(commuters_summarytable, digits = 1, caption = "Summary Statistics for only Commuters from 2024 ACS Sample") 
 ```
 
-## 
+\newpage
+
+```{r}
+knitr::kable(commuters_summarytable, 
+             digits = 2, 
+             caption = "Summary Statistics for only Commuters from 2024 ACS Sample") 
+```
 
 ## Question 4.1
 
@@ -246,17 +343,21 @@ commuters_graph
 
 ## Question 4.2
 
-The histogram is significantly right skewed...
+The histogram is significantly right skewed, and the center appears to be in the range of 10 - 15 minutes of commute time, closer to 15 mintues. Most commute times seem to be in the range of 0 - 30 minutes, but there is a notable tail into commute times of 90 minutes from this cluster. Additionally, there is a very small outlier of commute times between 140-150 minutes.
 
 ## Question 4.3
 
-Median is not in the table
+```{r}
+median(commuters$TRANTIME)
+mean(commuters$TRANTIME)
+```
+
+The mean commute time of 27.22 minutes is larger than the median of 20 minutes, meaning that the histogram should be right-skewed. This matches what is seen in the histogram.
 
 ## Question 4.4
 
 ```{r}
 ggsave("/Users/amytan/Desktop/gov51-ps1/output/commute_histogram.png", plot = commuters_graph)
-
 ```
 
 ## Question 5.1
@@ -278,6 +379,4 @@ The unweighted mean is 27.22 minutes. There is a difference of 0.024 between the
 
 ## Question 5.3
 
-The unweighted mean represents the mean commute time within the sample of respondents in commuters. The weighted mean represents the mean commute time of
-
-The weighted mean seeks to correct for oversampling and adjusts how many people in the U.S. population are represented by a given respondent within the survey data.
+The unweighted mean represents the mean commute time within the sample of respondents in commuters. The weighted mean represents a mean commute time of the sample that is adjusted to be nationally representative. The weighted mean seeks to correct for oversampling and adjusts how many people in the U.S. population are represented by a given respondent within the survey data. They differ because while the unweighted mean treats each respondent as the same in the mean calculation, the weighted mean assigns a certain number of people in the United States for each respondent to represent (in order to make the mean nationally representative), so each respondent is not worth the same in the weighted mean.
